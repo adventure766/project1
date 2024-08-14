@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player with Features</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        #videoContainer {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        #videoPlayer {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #000;
+        }
+        .playback-controls {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            justify-content: center;
+            gap: 10px;
+            z-index: 1;
+        }
+        .playback-controls button {
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            padding: 15px;
+            cursor: pointer;
+            font-size: 18px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .playback-controls button:hover {
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+        .playback-controls button:active {
+            transform: scale(0.95);
+        }
+        .playback-controls button.rewind {
+            background: linear-gradient(145deg, #333, #111);
+        }
+        .playback-controls button.play {
+            background: linear-gradient(145deg, #28a745, #218838);
+        }
+        .playback-controls button.forward {
+            background: linear-gradient(145deg, #007bff, #0056b3);
+        }
+        #qualitySelectorContainer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            padding: 5px 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            z-index: 1; /* Ensure the quality selector is above the popup */
+        }
+        #qualitySelector {
+            background: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 5px;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+        }
+        #qualitySelector option {
+            background: #fff;
+            color: #333;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        #buttonContainer {
+            margin: 20px 0;
+            text-align: center;
+        }
+        #downloadBtn {
+            background: linear-gradient(145deg, #28a745, #218838);
+        }
+        #upgradeBtn {
+            background: linear-gradient(145deg, #007bff, #0056b3);
+        }
+        /* Popup Form Styles */
+        #popupForm {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        #formContent {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2; /* Ensure the popup is above other elements */
+        }
+        #formContent h2 {
+            margin-bottom: 20px;
+            font-size: 22px;
+            color: #333;
+        }
+        #formContent input, #formContent button, #formContent select {
+            width: calc(100% - 20px);
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        #formContent button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #formContent button:hover {
+            background-color: #0056b3;
+        }
+        #formContent #paymentInstructions {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #333;
+            text-align: left;
+        }
+        #formContent img {
+            width: 120px;
+            margin: 20px 0;
+        }
+        #closeForm {
+            position: absolute;
+            bottom: 0px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            padding: 5px 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+        #closeForm:hover {
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+    </style>
+</head>
+<body>
+    <h1>Video Player with Multiple Features</h1>
+
+    <!-- Video Player with Quality Selector -->
+    <div id="videoContainer">
+        <video id="videoPlayer" controls>
+            <source src="video_720p.mp4" type="video/mp4" data-quality="720p">
+            <source src="video_480p.mp4" type="video/mp4" data-quality="480p">
+            <source src="video_320p.mp4" type="video/mp4" data-quality="320p">
+            Your browser does not support the video tag.
+        </video>
+        <div id="qualitySelectorContainer">
+            <label for="qualitySelector" style="color: #fff;">Quality:</label>
+            <select id="qualitySelector">
+                <option value="320p">320p</option>
+                <option value="480p">480p</option>
+                <option value="720p" selected>720p</option>
+            </select>
+        </div>
+        <div class="playback-controls">
+            <button id="rewindBtn" class="rewind">⏪</button>
+            <button id="playPauseBtn" class="play">▶️</button>
+            <button id="forwardBtn" class="forward">⏩</button>
+        </div>
+    </div>
+
+    <!-- Button Container -->
+    <div id="buttonContainer">
+        <button id="downloadBtn">Download Video</button>
+        <button id="upgradeBtn">Upgrade to Premium</button>
+    </div>
+
+    <!-- Popup Form -->
+    <div id="popupForm">
+        <div id="formContent">
+            <img src="Razorpay_logo.svg" alt="Razorpay Logo">
+            <h2>Upgrade to Premium</h2>
+            <form id="upgradeForm">
+                <input type="text" id="name" placeholder="Full Name" required>
+                <input type="email" id="email" placeholder="Email Address" required>
+                <input type="tel" id="phone" placeholder="Phone Number" required>
+                <select id="paymentOption" required>
+                    <option value="">Select Payment Option</option>
+                    <option value="paytm">Paytm</option>
+                    <option value="phonepe">PhonePe</option>
+                    <option value="gpay">Google Pay</option>
+                </select>
+                <div id="paymentInstructions"></div>
+                <button type="submit">Submit</button>
+                <button type="button" id="closeForm">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const videoPlayer = document.getElementById('videoPlayer');
+        const qualitySelector = document.getElementById('qualitySelector');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const upgradeBtn = document.getElementById('upgradeBtn');
+        const popupForm = document.getElementById('popupForm');
+        const closeForm = document.getElementById('closeForm');
+        const upgradeForm = document.getElementById('upgradeForm');
+        const rewindBtn = document.getElementById('rewindBtn');
+        const forwardBtn = document.getElementById('forwardBtn');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const playbackControls = document.querySelector('.playback-controls');
+        const videoContainer = document.getElementById('videoContainer');
+        const paymentOption = document.getElementById('paymentOption');
+        const paymentInstructions = document.getElementById('paymentInstructions');
+        let isPlaying = false;
+        let rewindClickCount = 0;
+        let forwardClickCount = 0;
+
+        // Video Quality Selector
+        qualitySelector.addEventListener('change', function() {
+            const selectedQuality = this.value;
+            const sources = videoPlayer.querySelectorAll('source');
+            let newSrc = null;
+            sources.forEach(source => {
+                if (source.getAttribute('data-quality') === selectedQuality) {
+                    newSrc = source.src;
+                }
+            });
+            if (newSrc) {
+                videoPlayer.src = newSrc;
+                videoPlayer.play().catch(error => console.error('Error playing video:', error));
+            }
+        });
+
+        // Download Video Button
+        downloadBtn.addEventListener('click', function() {
+            const selectedQuality = qualitySelector.value;
+            const sources = videoPlayer.querySelectorAll('source');
+            let videoToDownload = null;
+            sources.forEach(source => {
+                if (source.getAttribute('data-quality') === selectedQuality) {
+                    videoToDownload = source.src;
+                }
+            });
+
+            if (videoToDownload) {
+                const a = document.createElement('a');
+                a.href = videoToDownload;
+                a.download = `video_${selectedQuality}.mp4`;
+                a.click();
+            } else {
+                alert('Error: No video available for the selected quality.');
+            }
+        });
+
+        // Upgrade to Premium Button
+        upgradeBtn.addEventListener('click', function() {
+            popupForm.style.display = 'flex';
+        });
+
+        // Close Popup Form
+        closeForm.addEventListener('click', function() {
+            popupForm.style.display = 'none';
+        });
+
+        // Handle Payment Option Selection
+        paymentOption.addEventListener('change', function() {
+            const option = this.value;
+            let instructions = '';
+
+            if (option === 'paytm') {
+                instructions = 'Send the money to this UPI id: 7207217653@UPI';
+            } else if (option === 'phonepe') {
+                instructions = 'Send the money to this UPI id: 7207217653@phonepe';
+            } else if (option === 'gpay') {
+                instructions = 'Send the money to this UPI id: 7207217653@gpay';
+            }
+
+            paymentInstructions.textContent = instructions;
+        });
+
+        // Handle Form Submission
+        upgradeForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const payment = paymentOption.value;
+
+            if (name && email && phone && payment) {
+                simulatePaymentProcess().then(success => {
+                    if (success) {
+                        setPremiumUser(true);
+                        alert('Payment successful, you are now a premium user');
+                        popupForm.style.display = 'none';
+                    } else {
+                        alert('Payment failed, please try again');
+                    }
+                });
+            } else {
+                alert('Please fill out all fields');
+            }
+        });
+
+        function isPremiumUser() {
+            return localStorage.getItem('isPremium') === 'true';
+        }
+
+        function setPremiumUser(value) {
+            localStorage.setItem('isPremium', value);
+        }
+
+        function simulatePaymentProcess() {
+            return new Promise(resolve => {
+                setTimeout(() => resolve(true), 1000); // Simulate payment processing delay
+            });
+        }
+
+        // Playback Control Buttons
+        playPauseBtn.addEventListener('click', function() {
+            if (isPlaying) {
+                videoPlayer.pause();
+                playPauseBtn.textContent = '▶️'; // Play icon
+            } else {
+                videoPlayer.play().catch(error => console.error('Error playing video:', error));
+                playPauseBtn.textContent = '⏸️'; // Pause icon
+            }
+            isPlaying = !isPlaying;
+        });
+
+        rewindBtn.addEventListener('click', function() {
+            rewindClickCount++;
+            if (rewindClickCount === 2) {
+                videoPlayer.currentTime -= 5;
+                rewindClickCount = 0;
+            }
+        });
+
+        forwardBtn.addEventListener('click', function() {
+            forwardClickCount++;
+            if (forwardClickCount === 2) {
+                videoPlayer.currentTime += 5;
+                forwardClickCount = 0;
+            }
+        });
+
+        // Show playback controls and quality selector on hover
+        videoContainer.addEventListener('mouseover', function() {
+            playbackControls.style.display = 'flex';
+            document.getElementById('qualitySelectorContainer').style.display = 'block';
+        });
+
+        videoContainer.addEventListener('mouseleave', function() {
+            playbackControls.style.display = 'none';
+            document.getElementById('qualitySelectorContainer').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
